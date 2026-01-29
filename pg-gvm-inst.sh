@@ -1,5 +1,4 @@
 #!/bin/bash
-export DEBIAN_FRONTEND=noninteractive
 GVM_DB_IP="${GVM_DB_IP}"
 GVM_DB_PASS="${GVM_DB_PASS}"
 
@@ -65,6 +64,7 @@ run_command() {
 # Создаёт единые пути для директорий исходников, сборки и установки
 set_environment() {
   log INFO "Starting environment variable setup..."
+  export DEBIAN_FRONTEND=noninteractive
   export INSTALL_PREFIX=/usr/local                                              
   export SOURCE_DIR=$HOME/source                          
   export BUILD_DIR=$HOME/build                              
