@@ -1,6 +1,7 @@
 #!/bin/bash
-DB_HOST="$1"
-DB_PASS="$2"
+export DEBIAN_FRONTEND=noninteractive
+GVM_DB_IP="${GVM_DB_IP}"
+GVM_DB_PASS="${GVM_DB_PASS}"
 
 # -----------------------------------
 # Раздел: Логирование
