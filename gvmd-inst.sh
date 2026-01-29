@@ -777,13 +777,6 @@ setting_up_sudo_for_scanning() {
 init_db_params_and_pgpass() {
   log INFO "Collecting database connection parameters..."
 
-  # Фиксированные имя БД и пользователь
-  DB_NAME="gvmd"
-  DB_USER="gvm"
-  DB_PORT="5432"
-  DB_HOST=${db_host}
-  DB_PASS=${db_pass}
-
   log INFO "Creating .pgpass for gvm user..."
 
   # Создать .pgpass: host:port:database:user:password
@@ -1024,11 +1017,6 @@ create_remote_scanner() {
   log INFO "Scan certificates successfully restored to GVM directories"
   log INFO "Files: /var/lib/gvm/CA/scanclientcert.pem, /var/lib/gvm/CA/scancacert.pem"
   log INFO "Private key: /var/lib/gvm/private/CA/scanclientkey.pem"
-  
-  # Запрашиваем адрес и порт сканера
-  local SCANNER_HOST SCANNER_PORT
-  SCANNER_HOST=${scanner_host}
-  SCANNER_PORT="9999"
 
   log INFO "Using scanner: $SCANNER_HOST:$SCANNER_PORT"
   
