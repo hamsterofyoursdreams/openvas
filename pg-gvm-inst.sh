@@ -2,10 +2,6 @@
 GVM_DB_IP="$1"
 GVM_DB_PASS="$2"
 
-log INFO "Переменная окружения: GVM_DB_IP: $GVM_DB_IP"
-log INFO "Переменная окружения: GVM_DB_PASS: $GVM_DB_PASS"
-
-
 # -----------------------------------
 # Раздел: Логирование
 # -----------------------------------
@@ -94,6 +90,8 @@ set_environment() {
   log INFO "Переменная окружения: INSTALL_DIR=$INSTALL_DIR"
   log INFO "Environment variable set: GNUPGHOME=$GNUPGHOME"
   log INFO "Environment variable set: OPENVAS_GNUPG_HOME=$OPENVAS_GNUPG_HOME"
+  log INFO "Переменная окружения: GVM_DB_IP: $GVM_DB_IP"
+  log INFO "Переменная окружения: GVM_DB_PASS: $GVM_DB_PASS"
 }
 
 # -----------------------------------
