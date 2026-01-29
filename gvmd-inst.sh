@@ -326,7 +326,7 @@ install_openvasd_dep() {
     log INFO "Found $rustc_version and $cargo_version"
   else
     # Download and install rustup
-    if ! curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/rust/main/rustup-init.sh -o /tmp/rustup-init.sh; then
+    if ! curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/rustup-init.sh -o /tmp/rustup-init.sh; then
       log ERROR "Failed to download rustup installer. Check network."
       exit 1
     fi
