@@ -1,6 +1,6 @@
 #!/bin/bash
-GVM_DB_IP="${GVM_DB_IP}"
-GVM_DB_PASS="${GVM_DB_PASS}"
+GVM_DB_IP="$1"
+GVM_DB_PASS="$2"
 
 # -----------------------------------
 # Раздел: Логирование
