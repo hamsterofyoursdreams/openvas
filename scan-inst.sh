@@ -246,7 +246,7 @@ install_ospd_openvas_dep() {
       
   # Требуемые зависимости для ospd-openvas
   if ! run_command apt install -y \
-    python3 python3-pip python3-setuptools python3-packaging python3-wrapt python3-cffi python3-psutil python3-lxml python3-defusedxml python3-paramiko python3-redis python3-gnupg python3-paho-mqtt gvmd-common; then
+    python3 python3-pip python3-setuptools python3-packaging python3-wrapt python3-cffi python3-psutil python3-lxml python3-defusedxml python3-paramiko python3-redis python3-gnupg python3-paho-mqtt; then
     log ERROR "Failed to install required dependencies for ospd-openvas. Check apt configuration."
     exit 1
   fi
@@ -729,17 +729,107 @@ setting_up_sudo_for_scanning() {
   fi
 }
 
+# Функция скачивания сертификатов сканера
+downloads_certs() {
+  log INFO "Downloading scan certificates to GVM directories..."
+  
+  # Создание необходимых директорий
+  local dirs=(
+    "/var/lib/gvm/CA"
+    "/var/lib/gvm/private/CA"
+  )
+  
+  for dir in "${dirs[@]}"; do
+    if [ ! -d "$dir" ]; then
+      if ! run_command mkdir -p "$dir"; then
+        log ERROR "Failed to create directory $dir"
+        return 1
+      fi
+      log INFO "Created directory $dir"
+    else
+      log INFO "Directory $dir already exists"
+    fi
+  done
+  
+  # Копирование cacert.pem
+  if ! run_command curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/certs/cacert.pem -o /var/lib/gvm/CA/cacert.pem; then
+    log ERROR "Failed to copy cacert.pem to CA/"
+    return 1
+  fi
+
+  # Копирование cakey.pem
+  if ! run_command curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/certs/cakey.pem -o /var/lib/gvm/private/CA/cakey.pem; then
+    log ERROR "Failed to copy cakey.pem to CA/"
+    return 1
+  fi
+
+  # Копирование clientcert.pem 
+  if ! run_command curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/certs/clientcert.pem  -o /var/lib/gvm/CA/clientcert.pem; then
+    log ERROR "Failed to copy clientcert.pem to CA/"
+    return 1
+  fi
+
+  # Копирование clientkey.pem
+  if ! run_command curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/certs/clientkey.pem -o /var/lib/gvm/private/CA/clientkey.pem; then
+    log ERROR "Failed to copy clientkey.pem to CA/"
+    return 1
+  fi
+
+  # Копирование servercert.pem 
+  if ! run_command curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/certs/servercert.pem  -o /var/lib/gvm/CA/servercert.pem; then
+    log ERROR "Failed to copy servercert.pem to CA/"
+    return 1
+  fi
+
+  # Копирование serverkey.pem
+  if ! run_command curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/certs/serverkey.pem -o /var/lib/gvm/private/CA/serverkey.pem; then
+    log ERROR "Failed to copy serverkey.pem to CA/"
+    return 1
+  fi
+  
+  # Установка правильных прав доступа
+  if ! run_command chown gvm:gvm /var/lib/gvm/CA/*.pem /var/lib/gvm/private/CA/*.pem; then
+    log WARN "Failed to set ownership for scan certificates"
+  fi
+  
+  if ! run_command chmod 644 /var/lib/gvm/CA/*.pem && chmod 600 /var/lib/gvm/private/CA/*.pem; then
+    log WARN "Failed to set permissions for scan certificates"
+  fi
+  
+  log INFO "Scan certificates successfully restored to GVM directories"
+}
+
+# Синхронизирует фиды.
+feed_synchronization() {
+  log INFO "Starting feed synchronization..."
+  if ! run_command /usr/local/bin/greenbone-feed-sync; then
+    log ERROR "Failed to synchronize Greenbone feed."
+    exit 1
+  fi
+  log INFO "Feed synchronization completed."
+}
+
+# Запускает и включает сервисы OpenVAS.
+start_openvas() {
+  log INFO "Starting and enabling OpenVAS services..."
+  for service in ospd-openvas openvasd; do
+    if ! run_command systemctl start "$service"; then
+      log ERROR "Failed to start $service service."
+      exit 1
+    fi
+    if ! run_command systemctl enable "$service"; then
+      log WARN "Failed to enable $service service. Service may not start on boot."
+    else
+      log INFO "$service service started and enabled."
+    fi
+  done
+  log INFO "OpenVAS services started and enabled."
+}
+
 # Настраивает systemd-сервисы для компонентов OpenVAS.
 setting_up_services_for_systemd() {
   log INFO "Setting up systemd services..."
-    
-  log INFO "Generating self-signed SSL certificate for scanner..."
-    
-  if ! sudo -u gvm gvm-manage-certs -a; then
-    log ERROR "Failed to generate SSL certificate for scanner."
-    exit 1
-  fi
-
+  
   # ospd-openvas service
   log INFO "Creating ospd-openvas systemd service..."
   if ! cat << EOF > "$BUILD_DIR/ospd-openvas.service"
@@ -808,75 +898,6 @@ EOF
     exit 1
   fi
   log INFO "Systemd services setup completed."
-}
-
-# Функция копирования сертификатов сканера на удаленный gvmd хост в /tmp
-copy_certs_to_gvmd() {
-  log INFO "Requesting parameters for certificate copying to gvmd host..."
-    
-  # Проверка существования файлов сертификатов
-  local cert_files=(
-    "/var/lib/gvm/private/CA/clientkey.pem"
-    "/var/lib/gvm/CA/clientcert.pem" 
-    "/var/lib/gvm/CA/cacert.pem"
-  )
-    
-  for file in "${cert_files[@]}"; do
-    if [ ! -f "$file" ]; then
-      log ERROR "File $file not found!"
-      return 1
-    fi
-  done
-    
-  log INFO "Copying certificates to gvmd ..."
-    
-  # clientkey.pem
-  if ! run_command scp -i openvas_ssh_key.pem -o StrictHostKeyChecking=no var/lib/gvm/private/CA/clientkey.pem ${gvmd_user}@${gvmd_host}:/tmp/scanclientkey.pem; then
-    log ERROR "Failed to copy scanclientkey.pem"
-    return 1
-  fi
-    
-  # clientcert.pem
-  if ! run_command scp -i openvas_ssh_key.pem -o StrictHostKeyChecking=no /var/lib/gvm/CA/clientcert.pem ${gvmd_user}@${gvmd_host}:/tmp/scanclientcert.pem; then
-    log ERROR "Failed to copy scanclientcert.pem"
-    return 1
-  fi
-    
-  # cacert.pem
-  if ! run_command scp -i openvas_ssh_key.pem -o StrictHostKeyChecking=no /var/lib/gvm/CA/cacert.pem ${gvmd_user}@${gvmd_host}:/tmp/scancacert.pem; then
-    log ERROR "Failed to copy scancacert.pem"
-    return 1
-  fi
-    
-  log INFO "Certificates successfully copied to /tmp/ on gvmd $remote_host"
-  log INFO "Files: scanclientkey.pem, scanclientcert.pem, scancacert.pem"
-}
-
-# Синхронизирует фиды.
-feed_synchronization() {
-  log INFO "Starting feed synchronization..."
-  if ! run_command /usr/local/bin/greenbone-feed-sync; then
-    log ERROR "Failed to synchronize Greenbone feed."
-    exit 1
-  fi
-  log INFO "Feed synchronization completed."
-}
-
-# Запускает и включает сервисы OpenVAS.
-start_openvas() {
-  log INFO "Starting and enabling OpenVAS services..."
-  for service in ospd-openvas openvasd; do
-    if ! run_command systemctl start "$service"; then
-      log ERROR "Failed to start $service service."
-      exit 1
-    fi
-    if ! run_command systemctl enable "$service"; then
-      log WARN "Failed to enable $service service. Service may not start on boot."
-    else
-      log INFO "$service service started and enabled."
-    fi
-  done
-  log INFO "OpenVAS services started and enabled."
 }
 
 # -----------------------------------
@@ -969,11 +990,11 @@ main() {
   # Настройка sudo для сканирования
   setting_up_sudo_for_scanning
 
+  # Скачивание сертификатов сканера
+  downloads_certs
+
   # Настройка сервисов systemd
   setting_up_services_for_systemd
-
-  # Копирование сертификатов сканера на удаленный gvmd хост
-  copy_certs_to_gvmd
 
   # Синхронизация фидов
   feed_synchronization
