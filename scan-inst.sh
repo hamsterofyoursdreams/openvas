@@ -903,11 +903,11 @@ trap cleanup EXIT
 main() {
   log INFO "Starting Scanner machine  installation on $(date '+%Y-%m-%d %H:%M:%S')..."
 
-  # Устанавливаем необходимые пакеты для OpenVAS
-  install_packages
-
   # Устанавливаем переменные окружения для установки
   set_environment
+  
+  # Устанавливаем необходимые пакеты для OpenVAS
+  install_packages
 
   # Проверяем последние версии компонентов
   check_latest_version
