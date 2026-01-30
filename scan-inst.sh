@@ -169,7 +169,7 @@ install_common_dep() {
   run_command apt update
     
   if ! run_command apt install --no-install-recommends --assume-yes \
-    build-essential curl cmake pkg-config python3 python3-pip gnupg; then
+    build-essential curl cmake pkg-config python3 python3-pip gnupg libsnmp-dev snmp libsnmp-base; then
     log ERROR "Failed to install common dependencies. Check apt configuration."
     exit 1
   fi
@@ -266,7 +266,7 @@ install_openvasd_dep() {
       
   # Требуемые зависимости для openvasd
   if ! run_command apt install -y \
-    pkg-config libssl-dev mosquitto mosquitto-clients libsnmp-dev snmp libsnmp-base; then
+    pkg-config libssl-dev mosquitto mosquitto-clients; then
     log ERROR "Failed to install required dependencies for openvasd. Check apt configuration."
     exit 1
   fi
