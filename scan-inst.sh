@@ -266,7 +266,7 @@ install_openvasd_dep() {
       
   # Требуемые зависимости для openvasd
   if ! run_command apt install -y \
-    pkg-config libssl-dev mosquitto mosquitto-clients; then
+    pkg-config libssl-dev mosquitto mosquitto-clients libsnmp-dev snmp libsnmp-base; then
     log ERROR "Failed to install required dependencies for openvasd. Check apt configuration."
     exit 1
   fi
