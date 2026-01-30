@@ -169,7 +169,7 @@ install_common_dep() {
   run_command apt update
     
   if ! run_command apt install --no-install-recommends --assume-yes \
-    build-essential curl cmake pkg-config python3 python3-pip gnupg libsnmp-dev; then
+    build-essential curl cmake pkg-config python3 python3-pip gnupg snmp libsnmp-base; then
     log ERROR "Failed to install common dependencies. Check apt configuration."
     exit 1
   fi
