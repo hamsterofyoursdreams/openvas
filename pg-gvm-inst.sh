@@ -84,14 +84,14 @@ set_environment() {
     fi
   done
     
-  log INFO "Переменная окружения: INSTALL_PREFIX=$INSTALL_PREFIX"
-  log INFO "Переменная окружения: SOURCE_DIR=$SOURCE_DIR"
-  log INFO "Переменная окружения: BUILD_DIR=$BUILD_DIR"
-  log INFO "Переменная окружения: INSTALL_DIR=$INSTALL_DIR"
+  log INFO "Environment variable set: INSTALL_PREFIX=$INSTALL_PREFIX"
+  log INFO "Environment variable set: SOURCE_DIR=$SOURCE_DIR"
+  log INFO "Environment variable set: BUILD_DIR=$BUILD_DIR"
+  log INFO "Environment variable set: INSTALL_DIR=$INSTALL_DIR"
   log INFO "Environment variable set: GNUPGHOME=$GNUPGHOME"
   log INFO "Environment variable set: OPENVAS_GNUPG_HOME=$OPENVAS_GNUPG_HOME"
-  log INFO "Переменная окружения: GVM_DB_IP: $GVM_DB_IP"
-  log INFO "Переменная окружения: GVM_DB_PASS: $GVM_DB_PASS"
+  log INFO "Environment variable set: GVM_DB_IP: $GVM_DB_IP"
+  log INFO "Environment variable set: GVM_DB_PASS: $GVM_DB_PASS"
 }
 
 # -----------------------------------
