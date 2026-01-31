@@ -167,7 +167,7 @@ install_common_dep() {
   # Очистка кэша
   run_command apt clean
   run_command apt update
-  run_command echo "Y" | dpkg --configure systemd-timesyncd
+  echo "Y" | dpkg --configure systemd-timesyncd
   run_command apt install -y --reinstall systemd-timesyncd
     
   if ! run_command apt install --no-install-recommends --assume-yes \
