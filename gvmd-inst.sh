@@ -1097,12 +1097,6 @@ start_openvas() {
 
 # Выводит информацию для входа в веб-интерфейс OpenVAS.
 login_info() {
-  # ANSI коды цветов
-  local COLOR_INFO="\033[1;36m"  # Голубой для информации
-  local COLOR_RESET="\033[0m"
-  local BOX_COLOR="\033[1;34m"  # Синий для рамки
-  local WIDTH=60  # Ширина рамки
-
   log INFO "Providing login information for OpenVAS web interface..."
 
   # Безопасно получаем пароль
@@ -1123,16 +1117,12 @@ login_info() {
   local login_url="https://${host_ip}:9392"
 
   # Выводим информацию о входе в рамке
-  printf "\n${BOX_COLOR}%*s${COLOR_RESET}\n" "$WIDTH" | tr ' ' '#'  # Верхняя граница
-  printf "${BOX_COLOR}#${COLOR_RESET} OpenVAS Web Interface Login%*s${BOX_COLOR}${COLOR_RESET}\n" $((WIDTH-28)) ""
-  printf "${BOX_COLOR}${COLOR_RESET}%*s${BOX_COLOR}${COLOR_RESET}\n" $WIDTH | tr ' ' '-'  # Разделитель
-  printf "${BOX_COLOR}#${COLOR_RESET} Username       : admin%*s${BOX_COLOR}${COLOR_RESET}\n" $((WIDTH-24)) ""
-  printf "${BOX_COLOR}#${COLOR_RESET} Password       : %s%*s${BOX_COLOR}${COLOR_RESET}\n" "$password" $((WIDTH-19-${#password})) ""
-  printf "${BOX_COLOR}#${COLOR_RESET} URL            : %s%*s${BOX_COLOR}${COLOR_RESET}\n" "$login_url" $((WIDTH-19-${#login_url})) ""
-  printf "${BOX_COLOR}%*s${COLOR_RESET}\n" "$WIDTH" | tr ' ' '#'  # Нижняя граница
-  printf "\n${COLOR_INFO}Consider changing the administrator password with the following command:${COLOR_RESET}\n"
-  printf "\n${COLOR_INFO}/usr/local/sbin/gvmd --user=admin --new-password=<your_new_strong_password>${COLOR_RESET}\n"
-  printf "\n"
+  log INFO "OpenVAS Web Interface Login%*s\n"
+  log INFO "Username       : admin%*s\n" $((WIDTH-24)) ""
+  log INFO " Password       : %s%*s\n" "$password" $((WIDTH-19-${#password})) ""
+  log INFO " URL            : %s%*s\n" "$login_url" $((WIDTH-19-${#login_url})) ""
+  log INFO "\nConsider changing the administrator password with the following command:\n"
+  log INFO "\n/usr/local/sbin/gvmd --user=admin --new-password=<your_new_strong_password>\n"
 
   # Очищаем временный файл с паролем
   if ! rm -f /tmp/gvm_admin_password; then
