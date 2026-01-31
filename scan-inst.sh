@@ -163,20 +163,61 @@ check_latest_version() {
 # Устанавливает общие инструменты сборки и зависимости, необходимые для всех компонентов.
 install_common_dep() {
   log INFO "Installing common build dependencies..."
+  # Устанавливаем неинтерактивный режим для всех apt операций
+  export DEBIAN_FRONTEND=noninteractive
+  export NEEDRESTART_MODE=a
+    
+  log INFO "Attempting to remove systemd-timesyncd if present..."
   
-  # Очистка кэша с обработкой ошибок
-  log INFO "Attempting to remove systemd-timesyncd..."
-  if apt purge -y systemd-timesyncd 2>/dev/null; then
-    log INFO "Successfully removed systemd-timesyncd."
+  # Проверяем, установлен ли пакет
+  if dpkg -l systemd-timesyncd 2>/dev/null | grep -q "^ii"; then
+    log INFO "systemd-timesyncd found, attempting removal..."
+    
+    # Сначала пытаемся исправить поврежденный скрипт
+    if [ -f /var/lib/dpkg/info/systemd-timesyncd.postrm ]; then
+      log INFO "Fixing potentially corrupted postrm script..."
+      echo '#!/bin/sh' > /tmp/systemd-timesyncd.postrm
+      echo 'set -e' >> /tmp/systemd-timesyncd.postrm
+      echo 'if [ "$1" = "purge" ]; then' >> /tmp/systemd-timesyncd.postrm
+      echo '    rm -rf /etc/systemd/timesyncd.conf.d /var/lib/systemd/timesync 2>/dev/null || true' >> /tmp/systemd-timesyncd.postrm
+      echo 'fi' >> /tmp/systemd-timesyncd.postrm
+      echo 'exit 0' >> /tmp/systemd-timesyncd.postrm
+      chmod +x /tmp/systemd-timesyncd.postrm
+      cp /tmp/systemd-timesyncd.postrm /var/lib/dpkg/info/systemd-timesyncd.postrm
+    fi
+    
+    # Пробуем разные способы удаления
+    if apt-get purge -y systemd-timesyncd 2>/dev/null; then
+      log INFO "Successfully removed systemd-timesyncd via apt."
+    elif dpkg --remove systemd-timesyncd 2>/dev/null; then
+      log INFO "Successfully removed systemd-timesyncd via dpkg."
+    elif dpkg --purge --force-remove-reinstreq systemd-timesyncd 2>/dev/null; then
+      log INFO "Successfully force-purged systemd-timesyncd."
+    else
+      log WARN "Could not remove systemd-timesyncd, but continuing installation..."
+    fi
   else
-    log WARN "Failed to remove systemd-timesyncd, but continuing..."
-    # Попробуем force remove если обычный не сработал
-    dpkg --remove --force-remove-reinstreq systemd-timesyncd 2>/dev/null || true
+    log INFO "systemd-timesyncd not installed, skipping removal."
   fi
   
-  run_command apt autoremove
-  run_command apt autoclean
-  run_command apt update
+  # Исправляем возможные проблемы с пакетами
+  log INFO "Fixing any broken packages..."
+  apt-get -f install -y 2>/dev/null || true
+  
+  # Автоудаление в неинтерактивном режиме
+  log INFO "Removing unused packages..."
+  apt-get autoremove -y 2>/dev/null || true
+  
+  # Очистка кэша
+  log INFO "Cleaning package cache..."
+  apt-get autoclean -y 2>/dev/null || true
+  
+  # Обновление списка пакетов
+  log INFO "Updating package lists..."
+  if ! apt-get update 2>/dev/null; then
+    log ERROR "Failed to update package lists. Check network or repository configuration."
+    exit 1
+  fi
 
   if ! run_command apt install --no-install-recommends --assume-yes \
     build-essential curl cmake pkg-config python3 python3-pip gnupg libsnmp-dev; then
