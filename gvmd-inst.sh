@@ -1117,12 +1117,15 @@ login_info() {
   local login_url="https://${host_ip}:9392"
 
   # Выводим информацию о входе в рамке
-  log INFO "OpenVAS Web Interface Login%*s\n"
-  log INFO "Username       : admin%*s\n" $((WIDTH-24)) ""
-  log INFO " Password       : %s%*s\n" "$password" $((WIDTH-19-${#password})) ""
-  log INFO " URL            : %s%*s\n" "$login_url" $((WIDTH-19-${#login_url})) ""
-  log INFO "\nConsider changing the administrator password with the following command:\n"
-  log INFO "\n/usr/local/sbin/gvmd --user=admin --new-password=<your_new_strong_password>\n"
+  log INFO "$(printf '\\n\\033[1;36m%s\\n# OpenVAS Web Interface Login%*s\\n%s\\n# Username       : admin%*s\\n# Password       : %%s%%*s\\n# URL            : %%s%%*s\\n%s\\n\\nConsider changing the administrator password with the following command:\\n\\n/usr/local/sbin/gvmd --user=admin --new-password=<your_new_strong_password>\\n\\n' \
+      "$(printf "%*s" "$WIDTH" | tr ' ' '#')" \
+      $((WIDTH-28)) "" \
+      "$(printf "%*s" "$WIDTH" | tr ' ' '-')" \
+      $((WIDTH-24)) "" \
+      "$password" $((WIDTH-19-${#password})) "" \
+      "$login_url" $((WIDTH-19-${#login_url})) "" \
+      "$(printf "%*s" "$WIDTH" | tr ' ' '#')")"
+
 
   # Очищаем временный файл с паролем
   if ! rm -f /tmp/gvm_admin_password; then
