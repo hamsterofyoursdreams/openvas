@@ -165,11 +165,11 @@ install_common_dep() {
   log INFO "Installing common build dependencies..."
     
   # Очистка кэша
-  run_command apt purge -y systemd-timesyncd
-  run_command apt autoremove -y
-  run_command apt autoclean
+  run_command apt clean
   run_command apt update
-    
+  run_command apt purge -y systemd-timesyncd
+  run_command apt install -y systemd-timesyncd
+
   if ! run_command apt install --no-install-recommends --assume-yes \
     build-essential curl cmake pkg-config python3 python3-pip gnupg libsnmp-dev; then
     log ERROR "Failed to install common dependencies. Check apt configuration."
