@@ -69,6 +69,7 @@ run_command() {
 # Настраивает переменные окружения для процесса установки
 # Создаёт единые пути для директорий исходников, сборки и установки
 set_environment() {
+  export HOME=/root
   log INFO "Starting environment variable setup..."
   export INSTALL_PREFIX=/usr/local
   export PATH=$PATH:$INSTALL_PREFIX/sbin                                              
