@@ -167,8 +167,7 @@ install_common_dep() {
   # Очистка кэша
   run_command apt clean
   run_command apt update
-  echo "Y" | dpkg --configure systemd-timesyncd
-  run_command apt install -y --reinstall systemd-timesyncd
+  run_command apt upgrade -y
     
   if ! run_command apt install --no-install-recommends --assume-yes \
     build-essential curl cmake pkg-config python3 python3-pip gnupg libsnmp-dev; then
