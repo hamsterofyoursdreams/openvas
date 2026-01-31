@@ -106,17 +106,17 @@ set_environment() {
 
 # Создает пользователя и группу 'gvm' для запуска сервисов OpenVAS.
 create_gvm_user() {
-  log INFO "Setting up GVM user and group..."
-  if getent passwd gvm > /dev/null 2>&1; then
-    log WARN "GVM user already exists, skipping creation. Verify user settings."
-  else
-    run_command useradd -r -m -U -G sudo -s /usr/sbin/nologin gvm
-    if ! run_command usermod -aG gvm "$USER"; then
-      log WARN "Failed to add $USER to gvm group. Manual addition may be required."
-    else
-      log INFO "Created GVM user and group, added $USER to gvm group."
-    fi
-  fi
+	log INFO "Setting up GVM user and group..."
+	if getent passwd gvm > /dev/null 2>&1; then
+		log WARN "GVM user already exists, skipping creation. Verify user settings."
+	else
+		run_command useradd -r -m -U -G sudo -s /usr/sbin/nologin gvm
+		if ! run_command usermod -aG gvm "$USER"; then
+			log WARN "Failed to add $USER to gvm group. Manual addition may be required."
+		else
+			log INFO "Created GVM user and group, added $USER to gvm group."
+		fi
+	fi
 }
 
 # -----------------------------------
