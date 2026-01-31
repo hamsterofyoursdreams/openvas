@@ -1016,37 +1016,21 @@ EOF
 create_remote_scanner() {
   log INFO "Copying scan certificates from /tmp/ to GVM directories..."
   
-  # Проверка существования файлов в /tmp/
-  local tmp_cert_files=(
-    "/tmp/scanclientkey.pem"
-    "/tmp/scanclientcert.pem"
-    "/tmp/scancacert.pem"
-  )
-  
-  for file in "${tmp_cert_files[@]}"; do
-    if [ ! -f "$file" ]; then
-      log ERROR "File $file not found in /tmp/!"
-      return 1
-    fi
-  done
-  
-  log INFO "Copying certificates to GVM directories..."
-  
-  # Копирование clientkey.pem
-  if ! run_command cp /tmp/scanclientkey.pem /var/lib/gvm/private/CA/scanclientkey.pem; then
-    log ERROR "Failed to copy scanclientkey.pem to private/CA/"
+  # Копирование cacert.pem
+  if ! run_command curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/certs/cacert.pem -o /var/lib/gvm/CA/scancacert.pem; then
+    log ERROR "Failed to copy scancacert.pem to CA/"
     return 1
   fi
-  
-  # Копирование clientcert.pem  
-  if ! run_command cp /tmp/scanclientcert.pem /var/lib/gvm/CA/scanclientcert.pem; then
+
+  # Копирование clientcert.pem 
+  if ! run_command curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/certs/clientcert.pem  -o /var/lib/gvm/CA/scanclientcert.pem; then
     log ERROR "Failed to copy scanclientcert.pem to CA/"
     return 1
   fi
-  
-  # Копирование cacert.pem
-  if ! run_command cp /tmp/scancacert.pem /var/lib/gvm/CA/scancacert.pem; then
-    log ERROR "Failed to copy scancacert.pem to CA/"
+
+  # Копирование clientkey.pem
+  if ! run_command curl --proto '=https' --tlsv1.2 -s https://raw.githubusercontent.com/hamsterofyoursdreams/openvas/main/certs/clientkey.pem -o /var/lib/gvm/private/CA/scanclientkey.pem; then
+    log ERROR "Failed to copy scanclientkey.pem to CA/"
     return 1
   fi
   
