@@ -1,4 +1,7 @@
 #!/bin/bash
+USER="$1"
+GVMD_HOST="$2"
+GVMD_PORT="$3"
 # -----------------------------------
 # Раздел: Логирование
 # -----------------------------------
@@ -54,26 +57,13 @@ run_command() {
 }
 
 # -----------------------------------
-# Раздел: Проверки системы
-# -----------------------------------
-
-# Проверяет, что скрипт запущен от имени root для выполнения требований по правам доступа.
-check_root() {
-	log INFO "Checking for root privileges..."
-	if [ "$EUID" -ne 0 ]; then
-		log ERROR "This script must be run as root."
-		exit 1
-	fi
-	log INFO "Root privilege check passed."
-}
-
-# -----------------------------------
 # Раздел: Настройка окружения
 # -----------------------------------
 
 # Настраивает переменные окружения для процесса установки
 # Создаёт единые пути для директорий исходников, сборки и установки
 set_environment() {
+    export HOME=/root
 	log INFO "Starting environment variable setup..."
 	export INSTALL_PREFIX=/usr/local
 	export PATH=$PATH:$INSTALL_PREFIX/sbin                                              
@@ -95,11 +85,11 @@ set_environment() {
 		fi
 	done
 	
-	log INFO "Переменная окружения: INSTALL_PREFIX=$INSTALL_PREFIX"
+	log INFO "Environment variable set: INSTALL_PREFIX=$INSTALL_PREFIX"
 	log INFO "Environment variable set: PATH=$PATH"
-	log INFO "Переменная окружения: SOURCE_DIR=$SOURCE_DIR"
-	log INFO "Переменная окружения: BUILD_DIR=$BUILD_DIR"
-	log INFO "Переменная окружения: INSTALL_DIR=$INSTALL_DIR"
+	log INFO "Environment variable set: SOURCE_DIR=$SOURCE_DIR"
+	log INFO "Environment variable set: BUILD_DIR=$BUILD_DIR"
+	log INFO "Environment variable set: INSTALL_DIR=$INSTALL_DIR"
 	log INFO "Environment variable set: GNUPGHOME=$GNUPGHOME"
 	log INFO "Environment variable set: OPENVAS_GNUPG_HOME=$OPENVAS_GNUPG_HOME"
 }
@@ -447,14 +437,6 @@ adjusting_permissions() {
 # Настраивает systemd-сервисы для компонентов OpenVAS.
 setting_up_services_for_systemd() {
 	log INFO "Setting up systemd services..."
-	
-	# Хост и порт gvmd
-	read -rp "Enter gvmd host (default: 127.0.0.1): " GVMD_HOST
-	GVMD_HOST=${GVMD_HOST:-127.0.0.1}
-
-	read -rp "Enter gvmd port (default: 9390): " GVMD_PORT
-	GVMD_PORT=${GVMD_PORT:-9390}
-
 	# Сервис gsad
 	log INFO "Creating gsad systemd service..."
 	if ! cat << EOF > "$BUILD_DIR/gsad.service"
@@ -538,14 +520,11 @@ trap cleanup EXIT
 main() {
 	log INFO "Starting GSAD machine  installation on $(date '+%Y-%m-%d %H:%M:%S')..."
 
-	# Проверяем запуск от root
-	check_root
+	# Устанавливаем переменные окружения для установки
+	set_environment
 
 	# Устанавливаем необходимые пакеты для OpenVAS
 	install_packages
-
-	# Устанавливаем переменные окружения для установки
-	set_environment
 
 	# Проверяем последние версии компонентов
 	check_latest_version
