@@ -163,12 +163,20 @@ check_latest_version() {
 # Устанавливает общие инструменты сборки и зависимости, необходимые для всех компонентов.
 install_common_dep() {
   log INFO "Installing common build dependencies..."
-    
-  # Очистка кэша
-  run_command apt clean
+  
+  # Очистка кэша с обработкой ошибок
+  log INFO "Attempting to remove systemd-timesyncd..."
+  if apt purge -y systemd-timesyncd 2>/dev/null; then
+    log INFO "Successfully removed systemd-timesyncd."
+  else
+    log WARN "Failed to remove systemd-timesyncd, but continuing..."
+    # Попробуем force remove если обычный не сработал
+    dpkg --remove --force-remove-reinstreq systemd-timesyncd 2>/dev/null || true
+  fi
+  
+  run_command apt autoremove
+  run_command apt autoclean
   run_command apt update
-  run_command apt purge -y systemd-timesyncd
-  run_command apt install -y systemd-timesyncd
 
   if ! run_command apt install --no-install-recommends --assume-yes \
     build-essential curl cmake pkg-config python3 python3-pip gnupg libsnmp-dev; then
