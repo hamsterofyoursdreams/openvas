@@ -166,7 +166,7 @@ install_common_dep() {
     
   # Очистка кэша
   run_command apt purge -y systemd-timesyncd
-  run_command apt autoremove
+  run_command apt autoremove -y
   run_command apt autoclean
   run_command apt update
     
