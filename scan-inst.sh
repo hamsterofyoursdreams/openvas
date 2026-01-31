@@ -165,8 +165,7 @@ install_common_dep() {
   log INFO "Installing common build dependencies..."
     
   # Очистка кэша
-  run_command apt purge systemd-timesyncd
-  run_command dpkg --purge systemd-timesyncd
+  run_command apt purge -y systemd-timesyncd
   run_command apt autoremove
   run_command apt autoclean
   run_command apt update
