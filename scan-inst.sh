@@ -163,9 +163,6 @@ check_latest_version() {
 # Устанавливает общие инструменты сборки и зависимости, необходимые для всех компонентов.
 install_common_dep() {
   log INFO "Installing common build dependencies..."
-  # Устанавливаем неинтерактивный режим для всех apt операций
-  export DEBIAN_FRONTEND=noninteractive
-  export NEEDRESTART_MODE=a
     
   log INFO "Attempting to remove systemd-timesyncd if present..."
   
@@ -187,11 +184,11 @@ install_common_dep() {
     fi
     
     # Пробуем разные способы удаления
-    if apt-get purge -y systemd-timesyncd 2>/dev/null; then
+    if run_command apt purge -y systemd-timesyncd 2>/dev/null; then
       log INFO "Successfully removed systemd-timesyncd via apt."
-    elif dpkg --remove systemd-timesyncd 2>/dev/null; then
+    elif run_command dpkg --remove systemd-timesyncd 2>/dev/null; then
       log INFO "Successfully removed systemd-timesyncd via dpkg."
-    elif dpkg --purge --force-remove-reinstreq systemd-timesyncd 2>/dev/null; then
+    elif run_command dpkg --purge --force-remove-reinstreq systemd-timesyncd 2>/dev/null; then
       log INFO "Successfully force-purged systemd-timesyncd."
     else
       log WARN "Could not remove systemd-timesyncd, but continuing installation..."
@@ -202,19 +199,15 @@ install_common_dep() {
   
   # Исправляем возможные проблемы с пакетами
   log INFO "Fixing any broken packages..."
-  apt-get -f install -y 2>/dev/null || true
-  
-  # Автоудаление в неинтерактивном режиме
-  log INFO "Removing unused packages..."
-  apt-get autoremove -y 2>/dev/null || true
+  run_command apt -f install -y 2>/dev/null || true
   
   # Очистка кэша
   log INFO "Cleaning package cache..."
-  apt-get autoclean -y 2>/dev/null || true
+  run_command apt clean -y 2>/dev/null || true
   
   # Обновление списка пакетов
   log INFO "Updating package lists..."
-  if ! apt-get update 2>/dev/null; then
+  if ! run_command  apt update 2>/dev/null; then
     log ERROR "Failed to update package lists. Check network or repository configuration."
     exit 1
   fi
